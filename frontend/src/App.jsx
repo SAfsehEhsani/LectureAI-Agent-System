@@ -3,7 +3,8 @@ import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import "./App.css";
 
-const API = (import.meta.env.VITE_API_URL || "/api").replace(/\/+$/, "");
+const PROD_BACKEND = "https://lectureai-agent-system-production.up.railway.app";
+const API = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? PROD_BACKEND : "/api")).replace(/\/+$/, "");
 
 function App() {
   const [tab, setTab] = useState("youtube");
