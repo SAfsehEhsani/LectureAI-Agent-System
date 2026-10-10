@@ -1,0 +1,55 @@
+1
+00:00:00,000 --> 00:03:00,000
+Good morning everyone, welcome to CS 229 Lecture on Machine Learning Foundations. Today we are embarking on a 60-minute journey into how machines learn from empirical data rather than explicit rule programming.
+
+2
+00:03:00,000 --> 00:06:30,000
+Historically, Arthur Samuel in 1959 defined machine learning as the field of study that gives computers the ability to learn without being explicitly programmed. Traditional software takes input data and hand-crafted algorithms to yield results.
+
+3
+00:06:30,000 --> 00:10:00,000
+In contrast, machine learning takes input data and observed outputs to synthesize the underlying mathematical hypothesis function h of x. The key mathematical goal is minimizing an empirical loss function J of theta over training distribution D.
+
+4
+00:10:00,000 --> 00:14:00,000
+Let us formalize the learning paradigm. We are given a dataset D consisting of N feature-label pairs (x_i, y_i) sampled identically and independently from some unknown data-generating distribution P(x, y).
+
+5
+00:14:00,000 --> 00:18:30,000
+We categorize machine learning into three primary paradigms: Supervised learning, Unsupervised learning, and Reinforcement learning. In supervised learning, each training example carries a definitive ground-truth target label.
+
+6
+00:18:30,000 --> 00:23:00,000
+When the label y is continuous, such as predicting housing prices or stock market returns, we are solving a regression task. When y belongs to a discrete categorical set, such as classifying tumor malignancy, we solve classification.
+
+7
+00:23:00,000 --> 00:27:00,000
+In unsupervised learning, we receive unlabeled feature vectors x without any annotations. Our objective is discovering latent structure: clusters, manifold embeddings, density estimations, or dimensional representations like Principal Component Analysis.
+
+8
+00:27:00,000 --> 00:31:30,000
+Now let us transition to optimization and the mechanics of gradient descent. Consider linear regression with Mean Squared Error loss. To find the optimal weight parameters theta, we compute the partial gradient of J with respect to theta and iteratively update weights in the direction of steepest descent scaled by learning rate alpha.
+
+9
+00:31:30,000 --> 00:36:00,000
+Choosing the learning rate alpha is critical. If alpha is too small, gradient convergence is painfully slow. If alpha is excessively large, gradient updates overshoot the global minimum and may oscillate wildly or diverge to infinity.
+
+10
+00:36:00,000 --> 00:41:00,000
+Next, let us examine Artificial Neural Networks. A single biological-inspired neuron computes an affine linear combination z equals w transpose x plus b, followed by an activation function sigma of z. Non-linear activations like ReLU, sigmoid, or GELU enable networks to approximate arbitrary continuous functions, formalized by the Universal Approximation Theorem.
+
+11
+00:41:00,000 --> 00:46:00,000
+How do multi-layer perceptrons learn? Through the reverse-mode automatic differentiation algorithm known as Backpropagation. Propagating the error loss backward through the computation graph via the multivariate chain rule allows us to calculate exact partial gradients for every weight tensor efficiently.
+
+12
+00:46:00,000 --> 00:51:30,000
+Now, let us discuss one of the most fundamental challenges in empirical modeling: the Bias-Variance Tradeoff and Overfitting. High bias leads to underfitting, where the model lacks expressive capacity to capture the underlying pattern. High variance leads to overfitting, where the model memorizes idiosyncratic training noise.
+
+13
+00:51:30,000 --> 00:56:00,000
+To combat overfitting, practitioners employ regularization techniques. L2 weight decay penalizes large parameter magnitudes by adding the squared Euclidean norm of theta to the loss function. Dropout randomly zeroes out neuron activations during training, preventing co-adaptation. Early stopping halts training once validation performance degrades.
+
+14
+00:56:00,010 --> 00:60:00,000
+In summary, today we covered empirical risk minimization, gradient descent dynamics, multilayer backpropagation, and regularization paradigms. For next week's lecture, review vector calculus and linear algebra fundamentals. Thank you and see you next Tuesday.

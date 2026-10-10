@@ -1,5 +1,7 @@
 import sys, os, asyncio, logging, tempfile, json
+sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, ".")
 
 # Patch PyAV 14+ / 19+ metadata_errors issue in faster-whisper
 try:
@@ -20,15 +22,27 @@ except Exception:
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+load_dotenv()
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse
-from pipeline import (
-    process_youtube, process_uploaded_video, process_transcript,
-    export_markdown, export_pdf, render_one_clip, cut_youtube_clip
-)
-from backend.storage import save_pack, list_packs, get_pack, delete_pack, get_proof_certificate
+
+try:
+    from pipeline import (
+        process_youtube, process_uploaded_video, process_transcript,
+        export_markdown, export_pdf, render_one_clip, cut_youtube_clip
+    )
+except ImportError:
+    from backend.pipeline import (
+        process_youtube, process_uploaded_video, process_transcript,
+        export_markdown, export_pdf, render_one_clip, cut_youtube_clip
+    )
+
+try:
+    from backend.storage import save_pack, list_packs, get_pack, delete_pack, get_proof_certificate
+except ImportError:
+    from storage import save_pack, list_packs, get_pack, delete_pack, get_proof_certificate
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("lecturelens")
@@ -74,11 +88,15 @@ async def health():
 
 @app.get("/sample")
 async def get_sample():
-    sample_path = os.path.join(os.path.dirname(__file__), "..", "sample_lecture.srt")
-    if os.path.exists(sample_path):
-        with open(sample_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        return {"filename": "sample_lecture.srt", "content": content}
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "sample_lecture.srt"),
+        os.path.join(os.path.dirname(__file__), "..", "sample_lecture.srt"),
+        "sample_lecture.srt",
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return {"filename": "sample_lecture.srt", "content": f.read()}
     return {"filename": "sample_lecture.srt", "content": ""}
 
 
