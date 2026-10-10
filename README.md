@@ -1,6 +1,9 @@
 # 🎓 LectureLens AI — Lecture to Learning Pack
 
+# Deploy Link : https://lecture-ai-agent-system-6plw.vercel.app
+
 Turn any long lecture (60+ minutes) into a complete learning pack: timestamped chapters, revision notes, evidence-backed quiz questions, and short-clip suggestions — all powered by Groq's free LLM API and local Whisper transcription.
+
 
 ---
 
