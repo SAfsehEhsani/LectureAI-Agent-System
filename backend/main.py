@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 load_dotenv()
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse
 
@@ -48,18 +48,12 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("lecturelens")
 
 app = FastAPI(title="LectureLens AI")
+api = APIRouter()
 
-# Allow env-configured origins for deployment; fallback to localhost for dev
-_origins_env = os.getenv("CORS_ORIGINS", "")
-ORIGINS = [o.strip() for o in _origins_env.split(",") if o.strip()] or [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000",
-]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ORIGINS,
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -77,7 +71,7 @@ async def _run(fn, *args):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/health")
+@api.get("/health")
 async def health():
     return {
         "status": "ok",
@@ -86,7 +80,7 @@ async def health():
     }
 
 
-@app.get("/sample")
+@api.get("/sample")
 async def get_sample():
     candidates = [
         os.path.join(os.path.dirname(__file__), "sample_lecture.srt"),
@@ -100,7 +94,7 @@ async def get_sample():
     return {"filename": "sample_lecture.srt", "content": ""}
 
 
-@app.post("/generate/youtube")
+@api.post("/generate/youtube")
 async def gen_youtube(url: str = Form(...)):
     res = await _run(process_youtube, url, MAX_CLIPS)
     try:
@@ -110,7 +104,7 @@ async def gen_youtube(url: str = Form(...)):
     return res
 
 
-@app.post("/generate/upload")
+@api.post("/generate/upload")
 async def gen_upload(file: UploadFile = File(...)):
     suffix = "." + file.filename.rsplit(".", 1)[-1]
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -132,7 +126,7 @@ async def gen_upload(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/generate/transcript")
+@api.post("/generate/transcript")
 async def gen_transcript(file: UploadFile = File(...)):
     raw = (await file.read()).decode("utf-8", errors="replace")
     res = await _run(process_transcript, raw, file.filename, MAX_CLIPS)
@@ -143,12 +137,12 @@ async def gen_transcript(file: UploadFile = File(...)):
     return res
 
 
-@app.get("/history")
+@api.get("/history")
 async def get_history():
     return list_packs()
 
 
-@app.get("/history/{pack_id}")
+@api.get("/history/{pack_id}")
 async def get_history_item(pack_id: str):
     pack = get_pack(pack_id)
     if not pack:
@@ -156,13 +150,13 @@ async def get_history_item(pack_id: str):
     return pack
 
 
-@app.delete("/history/{pack_id}")
+@api.delete("/history/{pack_id}")
 async def del_history_item(pack_id: str):
     delete_pack(pack_id)
     return {"status": "deleted", "id": pack_id}
 
 
-@app.get("/history/{pack_id}/proof")
+@api.get("/history/{pack_id}/proof")
 async def get_pack_proof(pack_id: str):
     cert = get_proof_certificate(pack_id)
     if not cert:
@@ -174,7 +168,7 @@ async def get_pack_proof(pack_id: str):
     )
 
 
-@app.post("/clips/render")
+@api.post("/clips/render")
 async def clip_render(
     video_path: str = Form(None),
     source_url: str = Form(None),
@@ -203,7 +197,7 @@ async def clip_render(
         raise HTTPException(status_code=500, detail=f"FFmpeg clip cutting failed: {e}")
 
 
-@app.post("/export/markdown")
+@api.post("/export/markdown")
 async def exp_markdown(data: dict):
     md = export_markdown(data)
     return Response(
@@ -212,7 +206,7 @@ async def exp_markdown(data: dict):
     )
 
 
-@app.post("/export/pdf")
+@api.post("/export/pdf")
 async def exp_pdf(data: dict):
     loop = asyncio.get_event_loop()
     pdf = await loop.run_in_executor(None, export_pdf, data)
@@ -222,10 +216,14 @@ async def exp_pdf(data: dict):
     )
 
 
-@app.post("/export/json")
+@api.post("/export/json")
 async def exp_json(data: dict):
     return Response(
         content=json.dumps(data, ensure_ascii=False, indent=2),
         media_type="application/json",
         headers={"Content-Disposition": "attachment; filename=learning_pack.json"},
     )
+
+# Mount routes on both root and /api for flexible proxy/direct deployments
+app.include_router(api)
+app.include_router(api, prefix="/api")

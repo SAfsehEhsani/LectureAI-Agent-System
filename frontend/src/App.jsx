@@ -3,7 +3,7 @@ import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import "./App.css";
 
-const API = import.meta.env.VITE_API_URL || "/api";
+const API = (import.meta.env.VITE_API_URL || "/api").replace(/\/+$/, "");
 
 function App() {
   const [tab, setTab] = useState("youtube");
@@ -115,7 +115,11 @@ function App() {
       setResultTab("chapters");
       fetchHistory(); // Refresh history with new proof
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || "Failed to process lecture.");
+      if (e.response?.status === 405) {
+        setError("⚠️ 405 Method Not Allowed: Frontend is not connected to the backend. In Vercel Settings -> Environment Variables, add VITE_API_URL pointing to your Railway backend URL (e.g. https://your-app.up.railway.app) and Redeploy.");
+      } else {
+        setError(e.response?.data?.detail || e.message || "Failed to process lecture.");
+      }
     } finally {
       setLoading(false);
       setStatus("");
